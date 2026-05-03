@@ -100,4 +100,5 @@ def splash():
         disable_score=k.disable_score,
         bg_music_volume=k.bg_music_volume,
         has_bg_video=k.bg_video_path is not None,
+        navidrome_enabled=bool(k.navidrome_url and k.navidrome_playlist_id),
     )

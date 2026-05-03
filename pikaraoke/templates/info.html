@@ -119,6 +119,33 @@
 			$(this).next(".collapsible-content").slideToggle(200);
 		});
 
+		// Navidrome playlist picker
+		$("#navidrome-load-playlists").click(function() {
+			const $btn = $(this);
+			const $select = $("#pref-navidrome-playlist");
+			$btn.addClass("is-loading");
+			$.get("/navidrome_playlists")
+				.done(function(data) {
+					if (data.error) {
+						showNotification(data.error, "is-danger");
+						return;
+					}
+					const currentId = "{{ navidrome_playlist_id }}";
+					$select.empty().append('<option value="">-- select a playlist --</option>');
+					data.forEach(function(p) {
+						const selected = p.id === currentId ? " selected" : "";
+						$select.append(`<option value="${p.id}"${selected}>${p.name}</option>`);
+					});
+					showNotification("Playlists loaded", "is-success");
+				})
+				.fail(function() { showNotification("Could not reach Navidrome", "is-danger"); })
+				.always(function() { $btn.removeClass("is-loading"); });
+		});
+
+		$("#pref-navidrome-playlist").change(function() {
+			changePreferences("navidrome_playlist_id", $(this).val());
+		});
+
 			function serializePhrases(textareaValue) {
 				return textareaValue.split("\n").map(s => s.trim().replace(/[|]/g, "")).filter(s => s).join("|");
 			}
@@ -342,6 +369,45 @@
 						<label class="label" for="pref-splash-delay">
 							{# MSG: Numberbox label for setting the delay before playing the next song #} {% trans %}The delay in seconds before starting the next song{% endtrans %}
 						</label>
+					</div>
+				</div>
+			</div>
+
+			<hr class="my-0">
+
+			<header class="card-header py-3 px-5 collapsible-header is-collapsed">
+				<div class="media-content">
+				<h3 class="title m-0">{% trans %}Navidrome screensaver music{% endtrans %}</h3>
+				</div>
+			</header>
+			<div class="card-content collapsible-content">
+				<div class="content">
+					<p class="subtitle has-text-warning mt-1 is-size-6">
+						{% trans %}When the screensaver is active, PiKaraoke will stream music from a Navidrome playlist instead of playing local background music.{% endtrans %}
+					</p>
+					<div class="user-preference-container is-align-items-center">
+						<input id="pref-navidrome-url" class="user-preference-input input" type="text" data-pref="navidrome_url" data-start-value="{{ navidrome_url }}" value="{{ navidrome_url }}" placeholder="http://navidrome.local:4533" />
+						<label class="label" for="pref-navidrome-url">{% trans %}Navidrome server URL{% endtrans %}</label>
+					</div>
+					<div class="user-preference-container is-align-items-center">
+						<input id="pref-navidrome-username" class="user-preference-input input" type="text" data-pref="navidrome_username" data-start-value="{{ navidrome_username }}" value="{{ navidrome_username }}" placeholder="admin" />
+						<label class="label" for="pref-navidrome-username">{% trans %}Navidrome username{% endtrans %}</label>
+					</div>
+					<div class="user-preference-container is-align-items-center">
+						<input id="pref-navidrome-password" class="user-preference-input input" type="password" data-pref="navidrome_password" data-start-value="" value="" placeholder="••••••••" />
+						<label class="label" for="pref-navidrome-password">{% trans %}Navidrome password{% endtrans %}</label>
+					</div>
+					<div class="user-preference-container is-align-items-center">
+						<div class="is-flex is-align-items-center" style="gap: 0.5rem; flex: 1">
+							<select id="pref-navidrome-playlist" class="input" style="flex: 1">
+								<option value="">{% trans %}-- Load playlists --{% endtrans %}</option>
+								{% if navidrome_playlist_id %}
+								<option value="{{ navidrome_playlist_id }}" selected>{{ navidrome_playlist_id }}</option>
+								{% endif %}
+							</select>
+							<button id="navidrome-load-playlists" class="button is-info">{% trans %}Load{% endtrans %}</button>
+						</div>
+						<label class="label" for="pref-navidrome-playlist">{% trans %}Screensaver playlist{% endtrans %}</label>
 					</div>
 				</div>
 			</div>

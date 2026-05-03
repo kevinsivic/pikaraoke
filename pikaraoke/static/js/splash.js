@@ -16,6 +16,7 @@ let hlsInstance = null;
 let idleTime = 0;
 let screensaverTimeoutSeconds = PikaraokeConfig.screensaverTimeout;
 let bg_playlist = [];
+let navidrome_playlist = [];
 let bgMediaResumeTimeout = null;
 let scoreReviews = {
   low: ["Better luck next time!"],
@@ -242,12 +243,15 @@ const setupScreensaver = () => {
         if (screensaver.style.visibility === 'hidden') {
           screensaver.style.visibility = 'visible';
           playBGVideo(false);
+          playBGMusic(false);
+          playNavidromeMusic(true);
           startScreensaver(); // depends on upstream screensaver.js import
         }
         if (idleTime > screensaverTimeoutSeconds + 36000) idleTime = screensaverTimeoutSeconds;
       } else {
         if (screensaver.style.visibility === 'visible') {
           screensaver.style.visibility = 'hidden';
+          playNavidromeMusic(false);
           stopScreensaver(); // depends on upstream screensaver.js import
           updateBackgroundMediaState(true);
         }
@@ -477,6 +481,44 @@ const setupBackgroundMusicPlayer = () => {
   });
 }
 
+const getNavidromeMusicPlayer = () => document.getElementById("navidrome-music");
+
+const setupNavidromePlayer = () => {
+  if (!PikaraokeConfig.navidromeEnabled) return;
+  $.get("/navidrome_playlist", function (data) {
+    if (Array.isArray(data)) navidrome_playlist = data;
+  });
+  const player = getNavidromeMusicPlayer();
+  player.addEventListener("ended", async () => {
+    const current = player.getAttribute("src");
+    const idx = navidrome_playlist.indexOf(current);
+    const next = navidrome_playlist[(idx + 1) % navidrome_playlist.length];
+    player.setAttribute("src", next);
+    await player.load();
+    await player.play().catch(e => console.log("Navidrome autoplay blocked"));
+  });
+};
+
+const playNavidromeMusic = async (play) => {
+  const player = getNavidromeMusicPlayer();
+  if (!player) return;
+  if (play) {
+    if (!PikaraokeConfig.navidromeEnabled) return;
+    if (!autoplayConfirmed) return;
+    if (navidrome_playlist.length === 0) return;
+    if (isMediaPlaying(player)) return;
+    if (!player.getAttribute("src")) player.setAttribute("src", navidrome_playlist[0]);
+    player.volume = 0;
+    if (player.readyState <= 2) await player.load();
+    await player.play().catch(e => console.log("Navidrome autoplay blocked"));
+    $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000);
+  } else {
+    if (isMediaPlaying(player)) {
+      $(player).animate({ volume: 0 }, 2000, () => player.pause());
+    }
+  }
+};
+
 const handleUnsupportedBrowser = () => {
   if (!isSupportedBrowser) {
     let modalContents = document.getElementById("permissions-modal-content");
@@ -695,6 +737,7 @@ $(function () {
   setupOverlayMenus();
   setupVideoPlayer();
   setupBackgroundMusicPlayer();
+  setupNavidromePlayer();
 
   // Handle browser compatibility
   handleUnsupportedBrowser();

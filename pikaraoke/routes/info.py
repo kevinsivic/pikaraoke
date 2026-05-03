@@ -75,6 +75,9 @@ def info():
         preferred_language=preferred_language,
         browse_results_per_page=k.browse_results_per_page,
         enable_title_tidy=k.enable_title_tidy,
+        navidrome_url=k.navidrome_url,
+        navidrome_username=k.navidrome_username,
+        navidrome_playlist_id=k.navidrome_playlist_id,
         score_phrases={
             "low": k.low_score_phrases,
             "mid": k.mid_score_phrases,
