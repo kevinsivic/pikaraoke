@@ -63,6 +63,7 @@ def queue():
         site_title=site_name,
         title="Queue",
         admin=is_admin(),
+        url=k.url,
     )
 
 

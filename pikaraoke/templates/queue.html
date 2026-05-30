@@ -494,6 +494,11 @@
 
 {% block content %}
 
+<div style="text-align: center; margin-bottom: 24px;">
+  <img src="{{ url_for('images.qrcode') }}" style="width: 15vmin; image-rendering: pixelated" alt="qrcode" />
+  <p class="is-size-6 has-text-grey">{{ url }}</p>
+</div>
+
 <table class="table is-striped" id="auto-refresh" style="margin-bottom: 30px">
 </table>
 
