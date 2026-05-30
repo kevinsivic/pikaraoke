@@ -494,13 +494,14 @@
 
 {% block content %}
 
-<div style="text-align: center; margin-bottom: 24px;">
-  <img src="{{ url_for('images.qrcode') }}" style="width: 15vmin; image-rendering: pixelated" alt="qrcode" />
-  <p class="is-size-6 has-text-grey">{{ url }}</p>
+<div style="display: flex; gap: 24px; align-items: flex-start;">
+  <table class="table is-striped" id="auto-refresh" style="margin-bottom: 30px; flex: 1;">
+  </table>
+  <div style="text-align: center; flex-shrink: 0;">
+    <img src="{{ url_for('images.qrcode') }}" style="width: 15vmin; image-rendering: pixelated" alt="qrcode" />
+    <p class="is-size-6 has-text-grey">{{ url }}</p>
+  </div>
 </div>
-
-<table class="table is-striped" id="auto-refresh" style="margin-bottom: 30px">
-</table>
 
 {% if admin %}
 <div class="is-flex is-justify-content-space-between is-align-items-center mb-3">
