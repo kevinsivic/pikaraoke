@@ -2,6 +2,7 @@
 
 import logging
 import random
+import time
 
 import requests
 from flask import jsonify
@@ -13,6 +14,9 @@ navidrome_bp = Blueprint("navidrome", __name__)
 
 _SUBSONIC_VERSION = "1.16.1"
 _CLIENT_NAME = "pikaraoke"
+_CACHE_TTL = 3600
+
+_playlist_cache: dict = {"entries": [], "fetched_at": 0.0, "playlist_id": None}
 
 
 def _auth_params(k) -> dict:
@@ -27,6 +31,34 @@ def _auth_params(k) -> dict:
 
 def _subsonic_url(k, endpoint: str) -> str:
     return f"{k.navidrome_url.rstrip('/')}/rest/{endpoint}"
+
+
+def _fetch_playlist_entries(k) -> list[dict]:
+    params = _auth_params(k)
+    params["id"] = k.navidrome_playlist_id
+    resp = requests.get(
+        _subsonic_url(k, "getPlaylist.view"),
+        params=params,
+        timeout=5,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    entries = data["subsonic-response"]["playlist"].get("entry", [])
+    # Subsonic returns a dict (not list) when there is only one entry
+    if isinstance(entries, dict):
+        entries = [entries]
+    return entries
+
+
+def _get_cached_entries(k) -> list[dict]:
+    now = time.time()
+    stale = now - _playlist_cache["fetched_at"] > _CACHE_TTL
+    playlist_changed = _playlist_cache["playlist_id"] != k.navidrome_playlist_id
+    if stale or playlist_changed:
+        _playlist_cache["entries"] = _fetch_playlist_entries(k)
+        _playlist_cache["fetched_at"] = now
+        _playlist_cache["playlist_id"] = k.navidrome_playlist_id
+    return _playlist_cache["entries"]
 
 
 @navidrome_bp.route("/navidrome_playlists", methods=["GET"])
@@ -67,20 +99,7 @@ def navidrome_playlist():
     if not k.navidrome_url or not k.navidrome_playlist_id:
         return jsonify([])
     try:
-        params = _auth_params(k)
-        params["id"] = k.navidrome_playlist_id
-        resp = requests.get(
-            _subsonic_url(k, "getPlaylist.view"),
-            params=params,
-            timeout=5,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        entries = data["subsonic-response"]["playlist"].get("entry", [])
-        # Subsonic returns a dict (not list) when there is only one entry
-        if isinstance(entries, dict):
-            entries = [entries]
-
+        entries = _fetch_playlist_entries(k)
         auth_suffix = (
             f"u={k.navidrome_username}&p={k.navidrome_password}"
             f"&v={_SUBSONIC_VERSION}&c={_CLIENT_NAME}"
@@ -91,6 +110,29 @@ def navidrome_playlist():
         ]
         random.shuffle(stream_urls)
         return jsonify(stream_urls)
+    except requests.RequestException as e:
+        logging.error("Navidrome connection error: %s", e)
+        return jsonify({"error": "Could not connect to Navidrome"}), 502
+    except (KeyError, ValueError) as e:
+        logging.error("Navidrome response parse error: %s", e)
+        return jsonify({"error": "Unexpected response from Navidrome"}), 502
+
+
+@navidrome_bp.route("/navidrome_next", methods=["GET"])
+def navidrome_next():
+    """Return a random song from the configured Navidrome playlist.
+
+    Uses a server-side cache to avoid fetching the playlist on every song change.
+    """
+    k = get_karaoke_instance()
+    if not k.navidrome_url or not k.navidrome_playlist_id:
+        return jsonify({})
+    try:
+        entries = _get_cached_entries(k)
+        if not entries:
+            return jsonify({})
+        entry = random.choice(entries)
+        return jsonify({"id": entry["id"], "title": entry["title"]})
     except requests.RequestException as e:
         logging.error("Navidrome connection error: %s", e)
         return jsonify({"error": "Could not connect to Navidrome"}), 502
