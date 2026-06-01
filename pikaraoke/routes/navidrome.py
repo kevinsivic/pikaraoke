@@ -90,36 +90,6 @@ def navidrome_playlists():
         return jsonify({"error": "Unexpected response from Navidrome"}), 502
 
 
-@navidrome_bp.route("/navidrome_playlist", methods=["GET"])
-def navidrome_playlist():
-    """Return a shuffled list of stream URLs for the configured Navidrome playlist.
-
-    Credentials are embedded in each URL using standard Subsonic auth params so the
-    browser can stream directly from Navidrome without proxying through PiKaraoke.
-    """
-    k = get_karaoke_instance()
-    if not k.navidrome_url or not k.navidrome_playlist_id:
-        return jsonify([])
-    try:
-        entries = _fetch_playlist_entries(k)
-        auth_suffix = (
-            f"u={k.navidrome_username}&p={k.navidrome_password}"
-            f"&v={_SUBSONIC_VERSION}&c={_CLIENT_NAME}"
-        )
-        base = k.navidrome_url.rstrip("/")
-        stream_urls = [
-            f"{base}/rest/stream.view?id={entry['id']}&{auth_suffix}" for entry in entries
-        ]
-        random.shuffle(stream_urls)
-        return jsonify(stream_urls)
-    except requests.RequestException as e:
-        logging.error("Navidrome connection error: %s", e)
-        return jsonify({"error": "Could not connect to Navidrome"}), 502
-    except (KeyError, ValueError) as e:
-        logging.error("Navidrome response parse error: %s", e)
-        return jsonify({"error": "Unexpected response from Navidrome"}), 502
-
-
 def _rewrite_manifest(
     manifest_text: str, navidrome_base: str, song_id: str
 ) -> tuple[str, list[str]]:
