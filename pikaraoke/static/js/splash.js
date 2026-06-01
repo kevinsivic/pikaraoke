@@ -183,10 +183,16 @@ const playBGVideo = async (play) => {
   }
 }
 
+const isScreensaverActive = () => {
+  const screensaver = document.getElementById('screensaver');
+  return screensaver && screensaver.style.visibility === 'visible';
+};
+
 const shouldBackgroundMediaPlay = () => {
   return autoplayConfirmed &&
     !nowPlaying.now_playing &&
-    !nowPlaying.up_next;
+    !nowPlaying.up_next &&
+    !isScreensaverActive();
 };
 
 const updateBackgroundMediaState = (immediate = false) => {
