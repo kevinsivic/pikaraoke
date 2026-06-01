@@ -13,10 +13,10 @@ let isScoreShown = false;
 const hasBgVideo = PikaraokeConfig.hasBgVideo;
 let currentVideoUrl = null;
 let hlsInstance = null;
+let navHlsInstance = null;
 let idleTime = 0;
 let screensaverTimeoutSeconds = PikaraokeConfig.screensaverTimeout;
 let bg_playlist = [];
-let navidrome_playlist = [];
 let bgMediaResumeTimeout = null;
 let scoreReviews = {
   low: ["Better luck next time!"],
@@ -483,19 +483,39 @@ const setupBackgroundMusicPlayer = () => {
 
 const getNavidromeMusicPlayer = () => document.getElementById("navidrome-music");
 
+const _loadAndPlayNavidrome = (player, songId) => {
+  const url = `/navidrome_hls/${songId}`;
+  if (navHlsInstance) {
+    navHlsInstance.destroy();
+    navHlsInstance = null;
+  }
+  const useNativeHLS = player.canPlayType("application/vnd.apple.mpegurl") && !isChrome && !isEdge && !isMobileSafari;
+  if (useNativeHLS) {
+    player.src = url;
+    player.volume = 0;
+    player.play()
+      .then(() => $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000))
+      .catch(e => console.log("Navidrome autoplay blocked"));
+  } else {
+    navHlsInstance = new Hls();
+    navHlsInstance.loadSource(url);
+    navHlsInstance.attachMedia(player);
+    navHlsInstance.once(Hls.Events.MANIFEST_PARSED, () => {
+      player.volume = 0;
+      player.play()
+        .then(() => $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000))
+        .catch(e => console.log("Navidrome autoplay blocked"));
+    });
+  }
+};
+
 const setupNavidromePlayer = () => {
   if (!PikaraokeConfig.navidromeEnabled) return;
-  $.get("/navidrome_playlist", function (data) {
-    if (Array.isArray(data)) navidrome_playlist = data;
-  });
   const player = getNavidromeMusicPlayer();
   player.addEventListener("ended", async () => {
-    const current = player.getAttribute("src");
-    const idx = navidrome_playlist.indexOf(current);
-    const next = navidrome_playlist[(idx + 1) % navidrome_playlist.length];
-    player.setAttribute("src", next);
-    await player.load();
-    await player.play().catch(e => console.log("Navidrome autoplay blocked"));
+    const data = await $.get("/navidrome_next");
+    if (!data.id) return;
+    _loadAndPlayNavidrome(player, data.id);
   });
 };
 
@@ -505,13 +525,18 @@ const playNavidromeMusic = async (play) => {
   if (play) {
     if (!PikaraokeConfig.navidromeEnabled) return;
     if (!autoplayConfirmed) return;
-    if (navidrome_playlist.length === 0) return;
     if (isMediaPlaying(player)) return;
-    if (!player.getAttribute("src")) player.setAttribute("src", navidrome_playlist[0]);
-    player.volume = 0;
-    if (player.readyState <= 2) await player.load();
-    await player.play().catch(e => console.log("Navidrome autoplay blocked"));
-    $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000);
+    if (!navHlsInstance && !player.src) {
+      // Nothing loaded yet — fetch a song and start
+      const data = await $.get("/navidrome_next");
+      if (!data.id) return;
+      _loadAndPlayNavidrome(player, data.id);
+    } else {
+      // Song already loaded but paused — resume
+      player.volume = 0;
+      await player.play().catch(e => console.log("Navidrome autoplay blocked"));
+      $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000);
+    }
   } else {
     if (isMediaPlaying(player)) {
       $(player).animate({ volume: 0 }, 2000, () => player.pause());
