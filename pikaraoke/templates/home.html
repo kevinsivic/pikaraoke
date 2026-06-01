@@ -195,6 +195,23 @@
 <p id="up-next" class="has-text-warning"></p>
 <hr />
 
+<div class="columns is-mobile" style="margin-bottom: 0.5rem">
+  <div class="column">
+    {# MSG: Button on home page to navigate to the song search page. #}
+    <a href="{{ url_for('search.search') }}" class="button is-primary is-fullwidth is-large">
+      <i class="icon icon-search-1" style="margin-right: 8px"></i>
+      {% trans %}Search{% endtrans %}
+    </a>
+  </div>
+  <div class="column">
+    {# MSG: Button on home page to navigate to the song library browser. #}
+    <a href="{{ url_for('files.browse') }}" class="button is-info is-fullwidth is-large">
+      <i class="icon icon-folder-open-empty" style="margin-right: 8px"></i>
+      {% trans %}Browse{% endtrans %}
+    </a>
+  </div>
+</div>
+
 {% if admin %}
 <div class="has-background-black-bis box control-box" style="max-width: 500px; display: none">
 	{# MSG: Title of the box with controls such as pause and skip. #}
