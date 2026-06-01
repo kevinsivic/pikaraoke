@@ -13,7 +13,6 @@ let isScoreShown = false;
 const hasBgVideo = PikaraokeConfig.hasBgVideo;
 let currentVideoUrl = null;
 let hlsInstance = null;
-let navHlsInstance = null;
 let idleTime = 0;
 let screensaverTimeoutSeconds = PikaraokeConfig.screensaverTimeout;
 let bg_playlist = [];
@@ -483,39 +482,15 @@ const setupBackgroundMusicPlayer = () => {
 
 const getNavidromeMusicPlayer = () => document.getElementById("navidrome-music");
 
-const _loadAndPlayNavidrome = (player, songId) => {
-  const url = `/navidrome_hls/${songId}`;
-  if (navHlsInstance) {
-    navHlsInstance.destroy();
-    navHlsInstance = null;
-  }
-  const useNativeHLS = player.canPlayType("application/vnd.apple.mpegurl") && !isChrome && !isEdge && !isMobileSafari;
-  if (useNativeHLS) {
-    player.src = url;
-    player.volume = 0;
-    player.play()
-      .then(() => $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000))
-      .catch(e => console.log("Navidrome autoplay blocked"));
-  } else {
-    navHlsInstance = new Hls();
-    navHlsInstance.loadSource(url);
-    navHlsInstance.attachMedia(player);
-    navHlsInstance.once(Hls.Events.MANIFEST_PARSED, () => {
-      player.volume = 0;
-      player.play()
-        .then(() => $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000))
-        .catch(e => console.log("Navidrome autoplay blocked"));
-    });
-  }
-};
-
 const setupNavidromePlayer = () => {
   if (!PikaraokeConfig.navidromeEnabled) return;
   const player = getNavidromeMusicPlayer();
   player.addEventListener("ended", async () => {
     const data = await $.get("/navidrome_next");
     if (!data.id) return;
-    _loadAndPlayNavidrome(player, data.id);
+    player.src = `/navidrome_stream/${data.id}`;
+    player.volume = PikaraokeConfig.bgMusicVolume;
+    await player.play().catch(e => console.log("Navidrome autoplay blocked"));
   });
 };
 
@@ -526,17 +501,14 @@ const playNavidromeMusic = async (play) => {
     if (!PikaraokeConfig.navidromeEnabled) return;
     if (!autoplayConfirmed) return;
     if (isMediaPlaying(player)) return;
-    if (!navHlsInstance && !player.src) {
-      // Nothing loaded yet — fetch a song and start
+    if (!player.src) {
       const data = await $.get("/navidrome_next");
       if (!data.id) return;
-      _loadAndPlayNavidrome(player, data.id);
-    } else {
-      // Song already loaded but paused — resume
-      player.volume = 0;
-      await player.play().catch(e => console.log("Navidrome autoplay blocked"));
-      $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000);
+      player.src = `/navidrome_stream/${data.id}`;
     }
+    player.volume = 0;
+    await player.play().catch(e => console.log("Navidrome autoplay blocked"));
+    $(player).animate({ volume: PikaraokeConfig.bgMusicVolume }, 2000);
   } else {
     if (isMediaPlaying(player)) {
       $(player).animate({ volume: 0 }, 2000, () => player.pause());
