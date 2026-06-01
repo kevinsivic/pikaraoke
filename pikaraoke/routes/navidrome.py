@@ -87,8 +87,7 @@ def navidrome_playlist():
         )
         base = k.navidrome_url.rstrip("/")
         stream_urls = [
-            f"{base}/rest/stream.view?id={entry['id']}&{auth_suffix}"
-            for entry in entries
+            f"{base}/rest/stream.view?id={entry['id']}&{auth_suffix}" for entry in entries
         ]
         random.shuffle(stream_urls)
         return jsonify(stream_urls)
