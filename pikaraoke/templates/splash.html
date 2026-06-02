@@ -183,7 +183,8 @@
       </div>
       <div id="screensaver-qr"{% if hide_url %} style="display: none"{% endif %}>
         <img src="{{ url_for('images.qrcode') }}" />
-        <div>{{ hostap_info[0] }}<br />{{ url }}</div>
+        <div>{{ hostap_info[0] }}</div>
+        <div>{{ url }}</div>
       </div>
     </div>
   </div>

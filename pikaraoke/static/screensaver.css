@@ -58,3 +58,8 @@ body {
   max-width: 100%;
   image-rendering: pixelated;
 }
+
+#screensaver-qr div {
+  white-space: nowrap;
+  font-size: 1.8vmin;
+}
