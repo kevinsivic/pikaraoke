@@ -32,3 +32,17 @@ body {
   background-position: left center;
   background-origin: content-box;
 }
+
+#screensaver-qr {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  height: calc(30vmin - 20px);
+}
+
+#screensaver-qr img {
+  flex: 1;
+  min-height: 0;
+  width: auto;
+  image-rendering: pixelated;
+}
