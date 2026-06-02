@@ -178,10 +178,11 @@
 <div class="fw-fh-container">
   <div id="screensaver" style="visibility: hidden">
     <div id="dvd">
+      <div id="screensaver-logo">
+        <img src="{{ url_for('images.logo') }}" />
+      </div>
       <div id="screensaver-qr"{% if hide_url %} style="display: none"{% endif %}>
-        <div style="text-align: right">
-          <img src="{{ url_for('images.qrcode') }}" />
-        </div>
+        <img src="{{ url_for('images.qrcode') }}" />
         <div>{{ hostap_info[0] }}<br />{{ url }}</div>
       </div>
     </div>
