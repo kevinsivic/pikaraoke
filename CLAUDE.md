@@ -72,6 +72,8 @@ Tools: Black (100 char), isort, pycln, pylint, mdformat.
 
 Never commit to `master` directly.
 
+Push to the `forgejo-kevinsivic` remote: `git push forgejo-kevinsivic`.
+
 ## Pull Requests
 
 PRs must include a test plan: a minimal checklist targeting only the changes made, enabling quick manual verification.
