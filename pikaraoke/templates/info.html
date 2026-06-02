@@ -468,6 +468,26 @@
 			<hr class="my-0">
 
 			<header class="card-header py-3 px-5 collapsible-header is-collapsed">
+				<h3 class="m-0">{# MSG: Title text for the logo upload section of preferences #}{% trans %}Logo{% endtrans %}</h3>
+			</header>
+			<div class="card-content collapsible-content">
+				<div class="content">
+					<p class="subtitle has-text-warning mt-1 is-size-6">
+						{# MSG: Help text for the logo upload section #}
+						{% trans %}Upload a custom logo image to display on the splash screen. Accepted formats: PNG, JPG, GIF, WEBP.{% endtrans %}
+					</p>
+					<form action="{{ url_for('images.upload_logo') }}" method="post" enctype="multipart/form-data">
+						<div class="user-preference-container is-align-items-center">
+							<input type="file" name="logo" accept="image/png,image/jpeg,image/gif,image/webp" class="input" />
+							<button type="submit" class="button is-primary ml-3">{% trans %}Upload{% endtrans %}</button>
+						</div>
+					</form>
+				</div>
+			</div>
+
+			<hr class="my-0">
+
+			<header class="card-header py-3 px-5 collapsible-header is-collapsed">
 				<h3 class="m-0">{# MSG: Title text for the server settings section of preferences #}{% trans %}Server settings{% endtrans %}</h3>
 			</header>
 			<div class="card-content collapsible-content">

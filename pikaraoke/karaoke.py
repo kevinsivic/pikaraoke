@@ -200,6 +200,12 @@ class Karaoke:
         cli_args = {k: v for k, v in locals().items() if k != "self"}
         self._load_preferences(**cli_args)
 
+        # Restore a previously uploaded logo unless the CLI overrode it
+        if logo_path is None:
+            saved_logo = self.preferences.get("logo_path", "", section="SYSTEM")
+            if saved_logo:
+                self.logo_path = saved_logo
+
         # Log the settings to debug level
         self.log_settings_to_debug()
 
