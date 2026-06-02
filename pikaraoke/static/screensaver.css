@@ -28,6 +28,6 @@ body {
   padding: 10px;
   background-image: url("/logo");
   background-repeat: no-repeat;
-  background-size: 28vmin;
-  background-position: contain;
+  background-size: contain;
+  background-position: center;
 }
