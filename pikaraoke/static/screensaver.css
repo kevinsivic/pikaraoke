@@ -18,16 +18,17 @@ body {
   position: absolute;
   left: 0px;
   top: 0px;
-  height: 19vmin;
-  width: 39vmin;
+  height: 30vmin;
+  width: 70vmin;
   z-index: 11;
   border-radius: 10px;
   display: flex;
   justify-content: right;
-  align-items: flex-end;
+  align-items: center;
   padding: 10px;
   background-image: url("/logo");
   background-repeat: no-repeat;
   background-size: contain;
-  background-position: center;
+  background-position: left center;
+  background-origin: content-box;
 }

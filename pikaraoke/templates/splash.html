@@ -180,7 +180,7 @@
     <div id="dvd">
       <div id="screensaver-qr"{% if hide_url %} style="display: none"{% endif %}>
         <div style="text-align: right">
-          <img src="{{ url_for('images.qrcode') }}" style="width: 15vmin; height: 15vmin; image-rendering: pixelated" />
+          <img src="{{ url_for('images.qrcode') }}" style="width: calc(30vmin - 20px); height: calc(30vmin - 20px); image-rendering: pixelated" />
         </div>
         <div>{{ hostap_info[0] }}<br />{{ url }}</div>
       </div>
