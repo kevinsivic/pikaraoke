@@ -55,7 +55,7 @@
 
 <div id="logo-container">
   <div>
-    <img class="logo" src="{{ url_for('images.logo') }}" width="500px" alt="logo" />
+    <img class="logo" src="{{ url_for('images.logo') }}" alt="logo" />
   </div>
 </div>
 
@@ -282,6 +282,12 @@
     height: 100vh;
     align-items: center;
     justify-content: center;
+  }
+  .logo {
+    max-width: 500px;
+    max-height: 40vh;
+    width: auto;
+    height: auto;
   }
   #menu-background {
     bottom: 0;
